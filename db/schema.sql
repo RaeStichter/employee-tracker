@@ -1,5 +1,11 @@
-CREATE TABLE employees (
-  id INTEGER PRIMARY KEY,
-  first_name VARCHAR(30) NOT NULL,
-  last_name VARCHAR(30) NOT NULL
+DROP DATABASE IF EXISTS trackerDB;
+CREATE DATABASE trackerDB;
+USE trackerDB;
+
+CREATE TABLE employees
+(
+  id INT NOT NULL AUTO_INCREMENT,
+  first_name VARCHAR(30) NULL,
+  last_name VARCHAR(30) NULL,
+  PRIMARY KEY (id)
 );
