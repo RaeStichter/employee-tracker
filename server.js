@@ -1,38 +1,62 @@
+// get the client
 const mysql = require('mysql2');
-require("dotenv").config();
-//const express = require('express');
 
-// Express middleware
-// app.use(express.urlencoded({ extended: false }));
-// app.use(express.json());
+// allow for prompts
+const inquirer = require('inquirer');
+
+// hide db info
+require("dotenv").config();
 
 // Creates the connection to database
 const connection = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
-  // host: 'localhost',
   port: 3306,
-  // // Your MySQL username
-  // user: 'root',
-  // // Your MySQL password
-  // password: 'A;a8bcKGM<8jr;5',
   database: 'trackerDB'
 });
 
 connection.connect(err => {
   if (err) throw err;
   console.log('connected as id ' + connection.threadId);
-  afterConnection();
+  startEmployeeTracker();
 });
 
+// list of questions for promptQuestions
+const promptQuestions = [
+  {
+    type: 'list',
+    name: 'options',
+    message: 'What would you like to do?',
+    choices: [
+      'View All Employees',
+      'View One Emplyeee by ID',
+      'Create New Employee',
+      'Delete Employee'
+    ]
+  }
+]
+
+// begin the prompts from inquirer
+startEmployeeTracker = () => {
+  return inquirer.prompt(promptQuestions)
+  .then((data) => {
+    optionHandler(data.options);
+  });
+};
+
+
+
+
 //rename this to get all employees
-afterConnection = () => {
+// change this from afterConnection to viewAllEmployees
+// afterConnection = () => {
+viewAllEmployees = () => {
   connection.query('SELECT * FROM employees', function(err, res) {
     if (err) throw err;
     console.log(res);
     //connection.end();
-    getEmployeeById();
+    //getEmployeeById();
   });
 };
 
@@ -41,7 +65,7 @@ getEmployeeById = () => {
     if (err) throw err;
     console.log(res);
     //connection.end();
-    createNewEmployee();
+    //createNewEmployee();
   });
 };
 
@@ -57,12 +81,12 @@ createNewEmployee = () => {
     //connection.end();
     //afterConnection();
     //connection.end();
-    deleteEmployee();
+    //deleteEmployee();
   });
 };
 
 deleteEmployee = () => {
-  var userId = {'id': 5};
+  var userId = {'id': 14};
   const sql =  `DELETE FROM employees WHERE id = ?`;
   const params = [userId.id];
 
@@ -78,13 +102,23 @@ deleteEmployee = () => {
 
 
 
-
-
-
-
-
-
-
+// option handler to tell the program where to reference functions
+function optionHandler(options) {
+  switch(options) {
+    case 'View All Employees':
+      viewAllEmployees();
+      break;
+    case 'View One Emplyeee by ID':
+      getEmployeeById();
+      break;
+    case 'Create New Employee':
+      createNewEmployee();
+      break;
+    case 'Delete Employee':
+      deleteEmployee();
+      break;
+  };
+};
 
 
 
