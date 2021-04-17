@@ -29,10 +29,13 @@ const promptQuestions = [
     name: 'options',
     message: 'What would you like to do?',
     choices: [
+      'View All Departments',
+      'View All Roles',
       'View All Employees',
-      'View One Emplyeee by ID',
-      'Create New Employee',
-      'Delete Employee'
+      'Add a Department',
+      'Add a Role',
+      'Add an Employee',
+      'Update an Employee Role'
     ]
   }
 ]
@@ -46,6 +49,37 @@ startEmployeeTracker = () => {
 };
 
 
+// -------------------------- View All Departments --------------------------
+
+viewAllDepartments = () => {
+  connection.query('SELECT * FROM departments',
+    function(err, res) {
+      if (err) throw err;
+      console.log(res);
+  });
+};
+
+
+
+
+addDepartment = () => {
+  inquirer.prompt(
+    {
+      type: 'input',
+      name: 'department',
+      message: 'What is the name of the Department you would like to add?'
+    }
+  )
+  .then((data) => {
+    connection.query('INSERT INTO departments SET ?', {
+      name: data.department
+    },
+    function (err, res) {
+      if (err) throw err;
+      console.log(res.affectedRows + ' department was added!\n');
+    });
+  });
+}
 
 
 //rename this to get all employees
@@ -105,24 +139,29 @@ deleteEmployee = () => {
 // option handler to tell the program where to reference functions
 function optionHandler(options) {
   switch(options) {
+    case 'View All Departments':
+      viewAllDepartments();
+      break;
+    case 'View All Roles':
+      // viewAllRoles();
+      break;
     case 'View All Employees':
       viewAllEmployees();
       break;
-    case 'View One Emplyeee by ID':
-      getEmployeeById();
+    case 'Add a Department':
+      addDepartment();
       break;
-    case 'Create New Employee':
+    case 'Add a Role':
+      //getEmployeeById();
+      break;
+    case 'Add an Employee':
       createNewEmployee();
       break;
-    case 'Delete Employee':
-      deleteEmployee();
+    case 'Update an Employee Role':
+      //deleteEmployee();
       break;
   };
 };
-
-
-
-
 
 
 

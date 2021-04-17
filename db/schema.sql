@@ -2,9 +2,17 @@ DROP DATABASE IF EXISTS trackerDB;
 CREATE DATABASE trackerDB;
 USE trackerDB;
 
--- DROP TABLE IF EXISTS departments;
+DROP TABLE IF EXISTS departments;
 -- DROP TABLE IF EXISTS roles;
 DROP TABLE IF EXISTS employees;
+
+CREATE TABLE departments(
+  id INT AUTO_INCREMENT NOT NULL,
+  name VARCHAR(30) NOT NULL,
+  PRIMARY KEY (id)
+);
+
+
 
 CREATE TABLE employees
 (
