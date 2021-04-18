@@ -16,7 +16,8 @@ const connection = mysql.createConnection({
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   port: 3306,
-  database: 'trackerDB'
+  database: 'trackerDB',
+  multipleStatements: true
 });
 
 connection.connect(err => {
@@ -172,58 +173,62 @@ addRole = () => {
 // -------------------------- Add an Employee --------------------------
 
 createNewEmployee = () => {
+  // pull all roles that are currently available in the db
   var roles = [];
-    connection.query('SELECT title FROM roles', function (err, res) {
-        if (err) throw err;
-        for (var i = 0; i < res.length; i++) {
-            roles.push(res[i].title);
-        }
+    connection.query('SELECT title FROM roles',
+    function (err, res) {
+      if (err) throw err;
+      for (var i = 0; i < res.length; i++) {
+        roles.push(res[i].title);
+      }
     });
 
-    var managers = [];
-    connection.query('SELECT CONCAT( first_name, " ", last_name ) AS full_name FROM employees', function (err, res) {
-        if (err) throw err;
-        for (var i = 0; i < res.length; i++) {
-            managers.push(res[i].full_name);
-        }
+  // pull all managers that are currently available in the db
+  var managers = [];
+    connection.query('SELECT CONCAT( first_name, " ", last_name ) AS full_name FROM employees',
+    function (err, res) {
+      if (err) throw err;
+      for (var i = 0; i < res.length; i++) {
+        managers.push(res[i].full_name);
+      }
     });
 
-    return inquirer.prompt([
-        {
-            type: 'input',
-            name: 'employee_first_name',
-            message: 'What is the first name of the employee you would like to add?',
-        },
-        {
-            type: 'input',
-            name: 'employee_last_name',
-            message: 'What is the last name of the employee you would like to add?',
-        },
-        {
-            type: 'list',
-            name: 'employee_role',
-            message: 'What is the role of the employee you would like to add?',
-            choices: roles
-        },
-        {
-            type: 'list',
-            name: 'employee_manager',
-            message: 'Who is the manager of the employee you would like to add?',
-            choices: managers
-        },
-    ])
-    .then((data) => {
-        connection.query('SELECT id FROM roles WHERE title =?; SELECT id FROM employees WHERE CONCAT( first_name, " ", last_name ) =?',
-        [
-            data.employee_role,
-            data.employee_manager
-        ],
-        function (err, res) {
-            if (err) throw err;
-            var roleId = res[0][0].id;
-            var managerId = res[1][0].id;
+  return inquirer.prompt([
+    {
+      type: 'input',
+      name: 'employee_first_name',
+      message: 'What is the first name of the employee?',
+    },
+    {
+      type: 'input',
+      name: 'employee_last_name',
+      message: 'What is the last name of the employee?',
+    },
+    {
+      type: 'list',
+      name: 'employee_role',
+      message: 'What is the role of the employee?',
+      choices: roles
+    },
+    {
+      type: 'list',
+      name: 'employee_manager',
+      message: 'Who is the manager of the employee?',
+      choices: managers
+    },
+  ])
+  .then((data) => {
+    connection.query('SELECT id FROM roles WHERE title =?; SELECT id FROM employees WHERE CONCAT( first_name, " ", last_name ) =?',
+      [
+        data.employee_role,
+        data.employee_manager
+      ],
+      function (err, res) {
+        if (err) throw err;
+          var roleId = res[0][0].id;
+          var managerId = res[1][0].id;
         
-            connection.query('INSERT INTO employees SET ?,?,?,?',
+          connection.query('INSERT INTO employees SET ?,?,?,?',
             [{
                 first_name: data.employee_first_name
             },
@@ -233,55 +238,58 @@ createNewEmployee = () => {
             },
             {   manager_id: managerId
             }],
-        function (err, res) {
+          
+          function (err, res) {
             if (err) throw err;
-            console.log(res.affectedRows + ' employee added!\n');
-      });
-    }); 
-    });
+              console.log(res.affectedRows + ' employee added!\n');
+              whatNext();
+          });
+      }); 
+  });
 }
 
 // -------------------------- Update an Employee --------------------------
-
+// very similar to the add employee
 function updateEmployeeRole() {
   var roles = [];
   connection.query('SELECT title FROM roles', function (err, res) {
-      if (err) throw err;
+    if (err) throw err;
       for (var i = 0; i < res.length; i++) {
-          roles.push(res[i].title);
+        roles.push(res[i].title);
       }
   });
 
   var employees = [];
   connection.query('SELECT CONCAT( first_name, " ", last_name ) AS full_name FROM employees', function (err, res) {
-      if (err) throw err;
+    if (err) throw err;
       for (var i = 0; i < res.length; i++) {
-          employees.push(res[i].full_name);
+        employees.push(res[i].full_name);
       }
   
 
   return inquirer.prompt([
-      {
-          type: 'list',
-          name: 'employee_update',
-          message: 'Which employee would you like to update?',
-          choices: employees
-      },
-      {
-          type: 'list',
-          name: 'employee_role',
-          message: 'What would you like to update this employees role to?',
-          choices: roles
-      },
+    {
+      type: 'list',
+      name: 'employee_update',
+      message: 'Which employee would you like to update?',
+      choices: employees
+    },
+    {
+      type: 'list',
+      name: 'employee_role',
+      message: 'What is their new role?',
+      choices: roles
+    },
   ])
   .then((data) => {
-      connection.query('SELECT id FROM roles WHERE title =?; SELECT id FROM employees WHERE CONCAT( first_name, " ", last_name ) =?', 
+    connection.query('SELECT id FROM roles WHERE title =?; SELECT id FROM employees WHERE CONCAT( first_name, " ", "last_name" ) =?', 
       [
           data.employee_role,
           data.employee_update
       ],
+    
       function (err, res) {
-          if (err) throw err;
+        if (err) throw err;
           var roleId = res[0][0].id;
           var employeeId = res[1][0].id;
 
@@ -291,31 +299,18 @@ function updateEmployeeRole() {
           },
           {
               id: employeeId
-          }
-          ],
+          }],
+
           function(err, res) {
               if (err) throw err;
-              console.log(res.affectedRows + ' employee role update!\n');
-          }
-          )
-    });
+                console.log(res.affectedRows + ' employee role update!\n');
+                whatNext();
+          })
+      });
     });
   });
 }
 
-deleteEmployee = () => {
-  var userId = {'id': 14};
-  const sql =  `DELETE FROM employees WHERE id = ?`;
-  const params = [userId.id];
-
-  connection.query(sql, params, function(err, res) {
-    if (err) throw err;
-    console.log(res, userId.id, "deleted this id");
-    //connection.end();
-    //afterConnection();
-    //connection.end();
-  });
-};
 
 // Show the results in table form
 const tableResults = (results => {
