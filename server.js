@@ -291,7 +291,7 @@ function updateEmployeeRole() {
       function (err, res) {
         if (err) throw err;
           var roleId = res[0][0].id;
-          var employeeId = res[1][0].id;
+          var employeeId = 14;
 
           connection.query('UPDATE employees SET ? WHERE ?',
           [{
