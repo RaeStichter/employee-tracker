@@ -59,8 +59,17 @@ viewAllDepartments = () => {
   });
 };
 
+// -------------------------- View All Roles --------------------------
 
+viewAllRoles = () => {
+  connection.query('SELECT roles.id, roles.title, roles.salary, departments.name AS department FROM roles LEFT JOIN departments ON roles.department_id = departments.id',
+  function(err, res) {
+    if (err) throw err;
+    console.log(res);
+  });
+};
 
+// -------------------------- Add A Department --------------------------
 
 addDepartment = () => {
   inquirer.prompt(
@@ -81,6 +90,64 @@ addDepartment = () => {
   });
 }
 
+// -------------------------- Add A Role --------------------------
+
+addRole = () => {
+  var departments = [];
+  connection.query('SELECT * FROM departments', function (err, res) {
+    if (err) throw err;
+    for (var i = 0; i < res.length; i++) {
+      departments.push(res[i].name);
+    }
+  });
+  
+  return inquirer.prompt([ 
+    {
+      type: 'input',
+      name: 'role_title',
+      message: 'What is the title of the role would you like to add?',
+    },
+    {
+      type: 'input',
+      name: 'role_salary',
+      message: 'What is the salary of the role?'
+    },
+    {
+      type: 'list',
+      name: 'role_department',
+      message: 'What deartment would you like to add the role to?',
+      choices: departments
+    }
+  ])
+
+  .then((data) => {
+    connection.query('SELECT id FROM departments WHERE name =?',
+    [
+      data.role_department
+    ],
+    function (err, res) {
+      if (err) throw err;
+      var departmentId = res[0].id
+      
+      connection.query('INSERT INTO roles SET ?,?,?',
+        [
+          {
+            title: data.role_title
+          },
+          {   
+            salary: data.role_salary
+          },
+          {   
+            department_id: departmentId
+          }
+        ],
+      function (err, res) {
+        if (err) throw err;
+          console.log(res.affectedRows + ' role added!\n');
+      });
+    });
+  }
+)};
 
 //rename this to get all employees
 // change this from afterConnection to viewAllEmployees
@@ -143,7 +210,7 @@ function optionHandler(options) {
       viewAllDepartments();
       break;
     case 'View All Roles':
-      // viewAllRoles();
+      viewAllRoles();
       break;
     case 'View All Employees':
       viewAllEmployees();
@@ -152,7 +219,7 @@ function optionHandler(options) {
       addDepartment();
       break;
     case 'Add a Role':
-      //getEmployeeById();
+      addRole();
       break;
     case 'Add an Employee':
       createNewEmployee();
