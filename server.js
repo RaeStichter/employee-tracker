@@ -4,6 +4,9 @@ const mysql = require('mysql2');
 // allow for prompts
 const inquirer = require('inquirer');
 
+// table view
+const cTable = require('console.table')
+
 // hide db info
 require("dotenv").config();
 
@@ -35,7 +38,8 @@ const promptQuestions = [
       'Add a Department',
       'Add a Role',
       'Add an Employee',
-      'Update an Employee Role'
+      'Update an Employee Role',
+      'Quit'
     ]
   }
 ]
@@ -55,7 +59,8 @@ viewAllDepartments = () => {
   connection.query('SELECT * FROM departments',
     function(err, res) {
       if (err) throw err;
-      console.log(res);
+      tableResults(res);
+      whatNext();
   });
 };
 
@@ -65,7 +70,8 @@ viewAllRoles = () => {
   connection.query('SELECT roles.id, roles.title, roles.salary, departments.name AS department FROM roles LEFT JOIN departments ON roles.department_id = departments.id',
   function(err, res) {
     if (err) throw err;
-    console.log(res);
+    tableResults(res);
+    whatNext();
   });
 };
 
@@ -86,6 +92,7 @@ addDepartment = () => {
     function (err, res) {
       if (err) throw err;
       console.log(res.affectedRows + ' department was added!\n');
+      whatNext();
     });
   });
 }
@@ -144,6 +151,7 @@ addRole = () => {
       function (err, res) {
         if (err) throw err;
           console.log(res.affectedRows + ' role added!\n');
+          whatNext();
       });
     });
   }
@@ -200,7 +208,11 @@ deleteEmployee = () => {
   });
 };
 
-
+// Show the results in table form
+const tableResults = (results => {
+  res = cTable.getTable(results)
+  console.log(res)
+})
 
 
 // option handler to tell the program where to reference functions
@@ -227,17 +239,14 @@ function optionHandler(options) {
     case 'Update an Employee Role':
       //deleteEmployee();
       break;
+    case 'Quit':
+      connection.end();
   };
 };
 
-
-
-
-
-
-
-
-
+whatNext = () => {
+  startEmployeeTracker();
+};
 
 // // Dependencies
 // const express = require('express');
