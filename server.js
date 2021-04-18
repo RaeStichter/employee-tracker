@@ -75,6 +75,18 @@ viewAllRoles = () => {
   });
 };
 
+// -------------------------- View All Employees --------------------------
+
+viewAllEmployees = () => {
+  connection.query(
+    'SELECT employees.id, employees.first_name, employees.last_name, roles.title AS title, roles.salary AS salary, departments.name AS department, manager_id FROM employees LEFT JOIN roles ON employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id', 
+      function (err, res) {
+        if (err) throw err;
+        tableResults(res);
+        whatNext();
+      })
+}
+
 // -------------------------- Add A Department --------------------------
 
 addDepartment = () => {
@@ -157,42 +169,139 @@ addRole = () => {
   }
 )};
 
-//rename this to get all employees
-// change this from afterConnection to viewAllEmployees
-// afterConnection = () => {
-viewAllEmployees = () => {
-  connection.query('SELECT * FROM employees', function(err, res) {
-    if (err) throw err;
-    console.log(res);
-    //connection.end();
-    //getEmployeeById();
-  });
-};
-
-getEmployeeById = () => {
-  connection.query('SELECT * FROM employees WHERE id = 12', function(err, res) {
-    if (err) throw err;
-    console.log(res);
-    //connection.end();
-    //createNewEmployee();
-  });
-};
+// -------------------------- Add an Employee --------------------------
 
 createNewEmployee = () => {
-  var userId = {'first_name': 'Bob', 'last_name':'Test'};
-  const sql =  `INSERT INTO employees (first_name, last_name) 
-                VALUES (?,?)`;
-  const params = [userId.first_name, userId.last_name];
+  var roles = [];
+    connection.query('SELECT title FROM roles', function (err, res) {
+        if (err) throw err;
+        for (var i = 0; i < res.length; i++) {
+            roles.push(res[i].title);
+        }
+    });
 
-  connection.query(sql, params, function(err, res) {
-    if (err) throw err;
-    console.log(res);
-    //connection.end();
-    //afterConnection();
-    //connection.end();
-    //deleteEmployee();
+    var managers = [];
+    connection.query('SELECT CONCAT( first_name, " ", last_name ) AS full_name FROM employees', function (err, res) {
+        if (err) throw err;
+        for (var i = 0; i < res.length; i++) {
+            managers.push(res[i].full_name);
+        }
+    });
+
+    return inquirer.prompt([
+        {
+            type: 'input',
+            name: 'employee_first_name',
+            message: 'What is the first name of the employee you would like to add?',
+        },
+        {
+            type: 'input',
+            name: 'employee_last_name',
+            message: 'What is the last name of the employee you would like to add?',
+        },
+        {
+            type: 'list',
+            name: 'employee_role',
+            message: 'What is the role of the employee you would like to add?',
+            choices: roles
+        },
+        {
+            type: 'list',
+            name: 'employee_manager',
+            message: 'Who is the manager of the employee you would like to add?',
+            choices: managers
+        },
+    ])
+    .then((data) => {
+        connection.query('SELECT id FROM roles WHERE title =?; SELECT id FROM employees WHERE CONCAT( first_name, " ", last_name ) =?',
+        [
+            data.employee_role,
+            data.employee_manager
+        ],
+        function (err, res) {
+            if (err) throw err;
+            var roleId = res[0][0].id;
+            var managerId = res[1][0].id;
+        
+            connection.query('INSERT INTO employees SET ?,?,?,?',
+            [{
+                first_name: data.employee_first_name
+            },
+            {   last_name: data.employee_last_name
+            },
+            {   role_id: roleId
+            },
+            {   manager_id: managerId
+            }],
+        function (err, res) {
+            if (err) throw err;
+            console.log(res.affectedRows + ' employee added!\n');
+      });
+    }); 
+    });
+}
+
+// -------------------------- Update an Employee --------------------------
+
+function updateEmployeeRole() {
+  var roles = [];
+  connection.query('SELECT title FROM roles', function (err, res) {
+      if (err) throw err;
+      for (var i = 0; i < res.length; i++) {
+          roles.push(res[i].title);
+      }
   });
-};
+
+  var employees = [];
+  connection.query('SELECT CONCAT( first_name, " ", last_name ) AS full_name FROM employees', function (err, res) {
+      if (err) throw err;
+      for (var i = 0; i < res.length; i++) {
+          employees.push(res[i].full_name);
+      }
+  
+
+  return inquirer.prompt([
+      {
+          type: 'list',
+          name: 'employee_update',
+          message: 'Which employee would you like to update?',
+          choices: employees
+      },
+      {
+          type: 'list',
+          name: 'employee_role',
+          message: 'What would you like to update this employees role to?',
+          choices: roles
+      },
+  ])
+  .then((data) => {
+      connection.query('SELECT id FROM roles WHERE title =?; SELECT id FROM employees WHERE CONCAT( first_name, " ", last_name ) =?', 
+      [
+          data.employee_role,
+          data.employee_update
+      ],
+      function (err, res) {
+          if (err) throw err;
+          var roleId = res[0][0].id;
+          var employeeId = res[1][0].id;
+
+          connection.query('UPDATE employees SET ? WHERE ?',
+          [{
+              role_id: roleId
+          },
+          {
+              id: employeeId
+          }
+          ],
+          function(err, res) {
+              if (err) throw err;
+              console.log(res.affectedRows + ' employee role update!\n');
+          }
+          )
+    });
+    });
+  });
+}
 
 deleteEmployee = () => {
   var userId = {'id': 14};
@@ -237,7 +346,7 @@ function optionHandler(options) {
       createNewEmployee();
       break;
     case 'Update an Employee Role':
-      //deleteEmployee();
+      updateEmployeeRole();
       break;
     case 'Quit':
       connection.end();
@@ -247,28 +356,3 @@ function optionHandler(options) {
 whatNext = () => {
   startEmployeeTracker();
 };
-
-// // Dependencies
-// const express = require('express');
-// const mysql = require('mysql2');
-
-// // Port designation
-// const PORT = process.env.PORT || 3001;
-// const app = express();
-
-// // Express middleware
-// app.use(express.urlencoded({ extended: false }));
-// app.use(express.json());
-
-
-
-// // Default response for any other request(Not Found) Catch all
-// app.use((req, res) => {
-//     res.status(404).end();
-// });
-
-
-// // Listening
-// app.listen(PORT, () => {
-//     console.log(`Server running on port ${PORT}`);
-// });

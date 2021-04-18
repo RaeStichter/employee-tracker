@@ -10,14 +10,14 @@ VALUES
 
 INSERT INTO employees (first_name, last_name, role_id, manager_id)
 VALUES
-  ('Ronald', 'Firbank', 1, NULL),
-  ('Virginia', 'Woolf', 2, NULL),
+  ('Ronald', 'Firbank', 1, 3),
+  ('Virginia', 'Woolf', 2, 3),
   ('Piers', 'Gaveston', 3, NULL),
-  ('Charles', 'LeRoi', 4, NULL),
-  ('Katherine', 'Mansfield', 5, NULL),
+  ('Charles', 'LeRoi', 4, 6),
+  ('Katherine', 'Mansfield', 5, 6),
   ('Dora', 'Carrington', 6, NULL),
-  ('Edward', 'Bellamy', 7, NULL),
-  ('Montague', 'Summers', 8, NULL),
+  ('Edward', 'Bellamy', 7, 9),
+  ('Montague', 'Summers', 8, 9),
   ('Octavia', 'Butler', 9, NULL),
   ('Unica', 'Zurn', 10, NULL);
 
